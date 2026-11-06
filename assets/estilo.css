@@ -1,0 +1,30 @@
+:root { color-scheme: light; --fundo:#f3f6fb; --texto:#1d3148; --primario:#205b93; --borda:#d9e1ed; --erro:#a52828; }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--fundo); color: var(--texto); font-family: system-ui, -apple-system, "Segoe UI", sans-serif; line-height: 1.5; }
+a { color: var(--primario); }
+.topo { background: #152b44; color: white; }
+.topo-conteudo { max-width: 1060px; margin: auto; display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; gap: 20px; flex-wrap: wrap; }
+.topo a, .topo button { color: white; }
+.marca { font-weight: 750; text-decoration: none; font-size: 1.15rem; }
+nav { display: flex; gap: 16px; align-items: center; flex-wrap: wrap; }
+nav form { display: inline; margin: 0; }
+.sair { background: transparent; border: 1px solid #a2bad1; border-radius: 7px; padding: 7px 13px; cursor: pointer; font: inherit; }
+main { max-width: 1060px; margin: 28px auto; padding: 0 20px; }
+.card { background: white; border: 1px solid var(--borda); border-radius: 12px; padding: 26px; box-shadow: 0 4px 18px #142f4a0a; }
+h1 { margin: 0 0 6px; font-size: clamp(1.5rem, 4vw, 2rem); }
+.subtitulo { color: #61728a; margin: 0 0 24px; }
+label { display: block; font-weight: 600; margin: 16px 0 5px; }
+input { width: 100%; padding: 10px 12px; border: 1px solid #aab8c8; border-radius: 7px; font: inherit; }
+button, .botao { background: var(--primario); color: white; border: 0; border-radius: 7px; padding: 10px 16px; text-decoration: none; font: inherit; cursor: pointer; display: inline-block; }
+.botao-secundario { background: #e4ecf5; color: var(--texto); }
+.botao-perigo { background: #a4283a; }
+.acoes { display: flex; align-items: center; gap: 12px; margin-top: 24px; flex-wrap: wrap; }
+.aviso { padding: 12px; background: #e7f4ed; border: 1px solid #c4e6d1; border-radius: 8px; }
+.erro { padding: 12px; color: var(--erro); background: #fff0f0; border: 1px solid #f0c5c5; border-radius: 8px; }
+.tabela-rolagem { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: .95rem; }
+th, td { padding: 12px; border-bottom: 1px solid var(--borda); text-align: left; vertical-align: top; }
+th { background: #edf2f8; }
+td a { margin-right: 8px; white-space: nowrap; }
+small { color: #61728a; }
+@media (max-width:650px) { .card { padding: 16px; } th,td { padding: 8px; } }

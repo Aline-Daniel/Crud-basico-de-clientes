@@ -1,86 +1,58 @@
 <?php
-
-function limpar_texto($str){ 
-    return preg_replace("/[^0-9]/", "", $str); 
+require_once __DIR__ . '/conexao.php';
+require_once __DIR__ . '/validacao.php';
+$erro = '';
+$valores = ['nome' => '', 'email' => '', 'telefone' => '', 'nascimento' => ''];
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    verificar_csrf();
+    foreach ($valores as $chave => $_) {
+        $valores[$chave] = is_string($_POST[$chave] ?? null) ? $_POST[$chave] : '';
+    }
+    try {
+        [$nome, $email, $telefone, $nascimento] = validar_dados_cliente($_POST);
+        $stmt = $mysqli->prepare('INSERT INTO clientes (nome, email, telefone, nascimento, data) VALUES (?, ?, ?, ?, NOW())');
+        $stmt->bind_param('ssss', $nome, $email, $telefone, $nascimento);
+        $stmt->execute();
+        $stmt->close();
+        mensagem_flash('Cliente cadastrado com sucesso.');
+        header('Location: clientes.php', true, 303);
+        exit;
+    } catch (InvalidArgumentException $e) {
+        $erro = $e->getMessage();
+    } catch (mysqli_sql_exception $e) {
+        error_log('Falha ao cadastrar cliente.');
+        $erro = 'Nao foi possivel salvar os dados. Verifique o banco.';
+    }
 }
-
-if(count($_POST) > 0) {
-
-    include('conexao.php');
-    
-    $erro = false;
-    $nome = $_POST['nome'];
-    $email = $_POST['email'];
-    $telefone = $_POST['telefone'];
-    $nascimento = $_POST['nascimento'];
-
-    if(empty($nome)) {
-        $erro = "Preencha o nome";
-    }
-    if(empty($email) || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
-        $erro = "Preencha o e-mail";
-    }
-
-    if(!empty($nascimento)) { 
-        $pedacos = explode('/', $nascimento);
-        if(count($pedacos) == 3) {
-            $nascimento = implode ('-', array_reverse($pedacos));
-        } else {
-            $erro = "A data de nascimento deve seguir o padrão dia/mes/ano.";
-        }
-    }
-
-    if(!empty($telefone)) {
-        $telefone = limpar_texto($telefone);
-        if(strlen($telefone) != 11)
-            $erro = "O telefone deve ser preenchido no padrão (11) 98888-8888";
-    }
-
-    if($erro) {
-        echo "<p><b>ERRO: $erro</b></p>";
-    } else {
-        $sql_code = "INSERT INTO clientes (nome, email, telefone, nascimento, data) 
-        VALUES ('$nome', '$email', '$telefone', '$nascimento', NOW())";
-        $deu_certo = $mysqli->query($sql_code) or die($mysqli->error);
-        if($deu_certo) {
-            echo "<p><b>Cliente cadastrado com sucesso!!!</b></p>";
-            unset($_POST);
-        }
-    }
-
-}
-
-
 ?>
-<!DOCTYPE html>
-<html lang="en">
+<!doctype html>
+<html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cadastrar Cliente</title>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Cadastrar cliente</title><link rel="stylesheet" href="assets/estilo.css">
 </head>
 <body>
-    <a href="clientes.php">Voltar para a lista</a>
-    <form method="POST" action="">
-        <p>
-            <label>Nome:</label>
-            <input value="<?php if(isset($_POST['nome'])) echo $_POST['nome']; ?>" name="nome" type="text">
-        </p>
-        <p>
-            <label>E-mail:</label>
-            <input value="<?php if(isset($_POST['email'])) echo $_POST['email']; ?>" name="email" type="text">
-        </p>
-        <p>
-            <label>Telefone:</label>
-            <input value="<?php if(isset($_POST['telefone'])) echo $_POST['telefone']; ?>"  placeholder="(11) 98888-8888" name="telefone" type="text">
-        </p>
-        <p>
-            <label>Data de Nascimento:</label>
-            <input value="<?php if(isset($_POST['nascimento'])) echo $_POST['nascimento']; ?>"  name="nascimento" type="text">
-        </p>
-        <p>
-            <button type="submit">Salvar Cliente</button>
-        </p>
+<?php require __DIR__ . '/cabecalho.php'; ?>
+<main>
+  <section class="card">
+    <h1>Novo cliente</h1>
+    <p class="subtitulo">Preencha os dados para adicionar um novo cadastro.</p>
+    <?php if ($erro !== ''): ?><p class="erro" role="alert"><?= h($erro) ?></p><?php endif; ?>
+    <form method="post" action="cadastrar_cliente.php">
+      <input type="hidden" name="csrf_token" value="<?= h(csrf_token()) ?>">
+      <label for="nome">Nome *</label>
+      <input id="nome" name="nome" type="text" maxlength="100" required value="<?= h($valores['nome']) ?>">
+      <label for="email">E-mail *</label>
+      <input id="email" name="email" type="email" maxlength="100" required value="<?= h($valores['email']) ?>">
+      <label for="telefone">Celular com DDD (opcional)</label>
+      <input id="telefone" name="telefone" type="tel" maxlength="25" placeholder="(11) 98888-8888" value="<?= h($valores['telefone']) ?>">
+      <label for="nascimento">Nascimento (opcional)</label>
+      <input id="nascimento" name="nascimento" type="text" maxlength="10" placeholder="DD/MM/AAAA" value="<?= h($valores['nascimento']) ?>">
+      <div class="acoes">
+        <button type="submit">Salvar cliente</button>
+        <a class="botao botao-secundario" href="clientes.php">Cancelar</a>
+      </div>
     </form>
-</body>
-</html>
+  </section>
+</main>
+</body></html>
