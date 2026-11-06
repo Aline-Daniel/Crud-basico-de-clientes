@@ -1,10 +1,19 @@
 <?php
+require_once('conexao.php');
+$id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
+if (!$id) { http_response_code(400); exit('ID inválido'); }
 if(isset($_POST['confirmar'])) {
+    verificar_csrf();
 
-    include("conexao.php");
-    $id = intval($_GET['id']);
-    $sql_code = "DELETE FROM clientes WHERE id = '$id'";
-    $sql_query = $mysqli->query($sql_code) or die($mysqli->error);
+    $stmt = $mysqli->prepare('DELETE FROM clientes WHERE id = ?');
+    $stmt->bind_param('i', $id);
+    try { $sql_query = $stmt->execute(); }
+    catch (mysqli_sql_exception $e) {
+        error_log('Erro ao excluir cliente');
+        http_response_code(503);
+        exit('Não foi possível excluir o cliente.');
+    }
+    $stmt->close();
 
     if($sql_query) { ?>
         <h1>Cliente deletado com sucesso!</h1>
@@ -25,6 +34,7 @@ if(isset($_POST['confirmar'])) {
     <h1>Tem certeza que deseja deletar este cliente?</h1>
     
     <form action="" method="post">
+        <input type="hidden" name="csrf_token" value="<?php echo h(csrf_token()); ?>">
         <a style="margin-right:40px;" href="clientes.php">Não</a>
         <button name="confirmar" value="1" type="submit">Sim</button>
     </form>

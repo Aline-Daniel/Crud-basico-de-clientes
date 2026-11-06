@@ -1,12 +1,14 @@
 <?php
 
 include('conexao.php');
-$id = intval($_GET['id']);
+$id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
+if (!$id) { http_response_code(400); exit('ID inválido'); }
 function limpar_texto($str){ 
     return preg_replace("/[^0-9]/", "", $str); 
 }
 
 if(count($_POST) > 0) {
+    verificar_csrf();
 
     $erro = false;
     $nome = $_POST['nome'];
@@ -39,13 +41,16 @@ if(count($_POST) > 0) {
     if($erro) {
         echo "<p><b>ERRO: $erro</b></p>";
     } else {
-        $sql_code = "UPDATE clientes
-        SET nome = '$nome', 
-        email = '$email', 
-        telefone = '$telefone',
-        nascimento = '$nascimento'
-        WHERE id = '$id'";
-        $deu_certo = $mysqli->query($sql_code) or die($mysqli->error);
+        $stmt = $mysqli->prepare('UPDATE clientes SET nome = ?, email = ?, telefone = ?, nascimento = ? WHERE id = ?');
+        $nascimento = $nascimento ?: null;
+        $stmt->bind_param('ssssi', $nome, $email, $telefone, $nascimento, $id);
+        try { $deu_certo = $stmt->execute(); }
+        catch (mysqli_sql_exception $e) {
+            error_log('Erro ao atualizar cliente');
+            $deu_certo = false;
+            echo '<p>Não foi possível atualizar o cliente.</p>';
+        }
+        $stmt->close();
         if($deu_certo) {
             echo "<p><b>Cliente atualizado com sucesso!!!</b></p>";
             unset($_POST);
@@ -54,9 +59,13 @@ if(count($_POST) > 0) {
 
 }
 
-$sql_cliente = "SELECT * FROM clientes WHERE id = '$id'";
-$query_cliente = $mysqli->query($sql_cliente) or die($mysqli->error);
+$stmt = $mysqli->prepare('SELECT * FROM clientes WHERE id = ?');
+$stmt->bind_param('i', $id);
+$stmt->execute();
+$query_cliente = $stmt->get_result();
 $cliente = $query_cliente->fetch_assoc();
+$stmt->close();
+if (!$cliente) { http_response_code(404); exit('Cliente não encontrado'); }
 
 ?>
 <!DOCTYPE html>
@@ -69,21 +78,22 @@ $cliente = $query_cliente->fetch_assoc();
 <body>
     <a href="clientes.php">Voltar para a lista</a>
     <form method="POST" action="">
+        <input type="hidden" name="csrf_token" value="<?php echo h(csrf_token()); ?>">
         <p>
             <label>Nome:</label>
-            <input value="<?php echo $cliente['nome']; ?>" name="nome" type="text">
+            <input value="<?php echo h($cliente['nome']); ?>" name="nome" type="text">
         </p>
         <p>
             <label>E-mail:</label>
-            <input value="<?php echo $cliente['email']; ?>" name="email" type="text">
+            <input value="<?php echo h($cliente['email']); ?>" name="email" type="text">
         </p>
         <p>
             <label>Telefone:</label>
-            <input value="<?php if(!empty($cliente['telefone'])) echo formatar_telefone($cliente['telefone']); ?>"  placeholder="(11) 98888-8888" name="telefone" type="text">
+            <input value="<?php if(!empty($cliente['telefone'])) echo h(formatar_telefone($cliente['telefone'])); ?>"  placeholder="(11) 98888-8888" name="telefone" type="text">
         </p>
         <p>
             <label>Data de Nascimento:</label>
-            <input value="<?php if(!empty($cliente['nascimento'])) echo formatar_data($cliente['nascimento']); ?>"  name="nascimento" type="text">
+            <input value="<?php if(!empty($cliente['nascimento'])) echo h(formatar_data($cliente['nascimento'])); ?>"  name="nascimento" type="text">
         </p>
         <p>
             <button type="submit">Salvar Cliente</button>

@@ -2,7 +2,7 @@
 include('conexao.php');
 
 $sql_clientes = "SELECT * FROM clientes";
-$query_clientes = $mysqli->query($sql_clientes) or die($mysqli->error);
+$query_clientes = $mysqli->query($sql_clientes) or die('Falha ao consultar clientes');
 $num_clientes = $query_clientes->num_rows;
 ?>
 <!DOCTYPE html>
@@ -45,15 +45,15 @@ $num_clientes = $query_clientes->num_rows;
                 $data_cadastro = date("d/m/Y H:i", strtotime($cliente['data']));
                 ?>
                 <tr>
-                    <td><?php echo $cliente['id']; ?></td>
-                    <td><?php echo $cliente['nome']; ?></td>
-                    <td><?php echo $cliente['email']; ?></td>
-                    <td><?php echo $telefone; ?></td>
-                    <td><?php echo $nascimento; ?></td>
-                    <td><?php echo $data_cadastro; ?></td>
+                    <td><?php echo h($cliente['id']); ?></td>
+                    <td><?php echo h($cliente['nome']); ?></td>
+                    <td><?php echo h($cliente['email']); ?></td>
+                    <td><?php echo h($telefone); ?></td>
+                    <td><?php echo h($nascimento); ?></td>
+                    <td><?php echo h($data_cadastro); ?></td>
                     <td>
-                        <a href="editar_cliente.php?id=<?php echo $cliente['id']; ?>">Editar</a>
-                        <a href="deletar_cliente.php?id=<?php echo $cliente['id']; ?>">Deletar</a>
+                        <a href="editar_cliente.php?id=<?php echo h($cliente['id']); ?>">Editar</a>
+                        <a href="deletar_cliente.php?id=<?php echo h($cliente['id']); ?>">Deletar</a>
                     </td>
                 </tr>
                 <?php
