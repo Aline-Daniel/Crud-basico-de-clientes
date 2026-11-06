@@ -54,7 +54,7 @@ php tests/testar_validacao.php
 php -l login.php
 ~~~
 
-O workflow no GitHub Actions verifica a sintaxe dos PHP, testes de validacao/autenticacao e a integracao HTTP com um banco MySQL **temporario**, usando credenciais somente para testes.
+O workflow no GitHub Actions verifica a sintaxe dos arquivos PHP e executa testes de validacao e autenticacao sem abrir conexao com um banco de dados. **Ainda faltam testes de ponta a ponta com MySQL e navegador** antes de qualquer uso fora de uma demonstracao.
 
 ## Estrutura
 - **login.php**, **logout.php**, **seguranca.php**: autenticacao, sessao e CSRF.
